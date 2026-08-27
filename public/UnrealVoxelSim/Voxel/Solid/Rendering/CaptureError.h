@@ -2,13 +2,11 @@
 
 namespace UnrealVoxelSim::Voxel::Solid::Rendering
 {
-
-enum class CaptureError
-{
-    InvalidRegion,
-    OutOfBounds,
-    SizeOverflow,
-    ReadFailed,
-};
-
+	enum class CaptureError
+	{
+		InvalidRegion,
+		OutOfBounds,
+		SizeOverflow,
+		ReadFailed,
+	};
 } // namespace UnrealVoxelSim::Voxel::Solid::Rendering

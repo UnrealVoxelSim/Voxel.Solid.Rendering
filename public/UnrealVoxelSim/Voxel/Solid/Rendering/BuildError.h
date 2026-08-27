@@ -2,11 +2,9 @@
 
 namespace UnrealVoxelSim::Voxel::Solid::Rendering
 {
-
-enum class BuildError
-{
-    InvalidSnapshot,
-    SizeOverflow,
-};
-
+	enum class BuildError
+	{
+		InvalidSnapshot,
+		SizeOverflow,
+	};
 } // namespace UnrealVoxelSim::Voxel::Solid::Rendering

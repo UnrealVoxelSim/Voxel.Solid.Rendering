@@ -9,19 +9,17 @@
 
 namespace UnrealVoxelSim::Voxel::Solid::Rendering
 {
+	class Sampler final
+	{
+	public:
+		Sampler(const UnrealVoxelSim::Voxel::Api::IBounds& bounds,
+		        const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader& reader) noexcept;
 
-class Sampler final
-{
-  public:
-    Sampler(const UnrealVoxelSim::Voxel::Api::IBounds &bounds,
-            const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader &reader) noexcept;
+		[[nodiscard]] std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Snapshot, CaptureError> Capture(
+			UnrealVoxelSim::Voxel::Api::Region target) const;
 
-    [[nodiscard]] std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Snapshot, CaptureError> Capture(
-        UnrealVoxelSim::Voxel::Api::Region target) const;
-
-  private:
-    const UnrealVoxelSim::Voxel::Api::IBounds &m_Bounds;
-    const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader &m_Reader;
-};
-
+	private:
+		const UnrealVoxelSim::Voxel::Api::IBounds& m_Bounds;
+		const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader& m_Reader;
+	};
 } // namespace UnrealVoxelSim::Voxel::Solid::Rendering

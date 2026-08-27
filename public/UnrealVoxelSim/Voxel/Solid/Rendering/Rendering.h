@@ -1,3 +1,5 @@
+// TODO remove proxy-header
+
 #pragma once
 
 #include "UnrealVoxelSim/Voxel/Solid/Rendering/BuildError.h"
