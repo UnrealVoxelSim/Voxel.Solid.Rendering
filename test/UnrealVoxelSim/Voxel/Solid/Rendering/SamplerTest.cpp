@@ -75,7 +75,7 @@ class FakeField final : public UnrealVoxelSim::Voxel::Api::IBounds,
     std::vector<UnrealVoxelSim::Voxel::Solid::Api::Cell> m_Cells;
 };
 
-} // namespace
+}
 
 TEST(SamplerTest, CapturesOneCellHaloAndMapsMaterialsToSurfaces)
 {
@@ -113,4 +113,4 @@ TEST(SamplerTest, RejectsTargetsOutsideLogicalBounds)
     EXPECT_EQ(result.error(), CaptureError::OutOfBounds);
 }
 
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}

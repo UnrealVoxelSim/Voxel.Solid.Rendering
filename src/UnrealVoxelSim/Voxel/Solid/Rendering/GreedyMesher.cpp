@@ -126,7 +126,7 @@ struct MaskCell final
     return true;
 }
 
-} // namespace
+}
 
 std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Mesh, BuildError> GreedyMesher::Build(
     const UnrealVoxelSim::Voxel::Rendering::Api::Snapshot &snapshot) const
@@ -251,4 +251,4 @@ std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Mesh, BuildError> GreedyMes
     return mesh;
 }
 
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}

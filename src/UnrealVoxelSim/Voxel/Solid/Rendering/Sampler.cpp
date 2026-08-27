@@ -59,4 +59,4 @@ std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Snapshot, CaptureError> Sam
     return snapshot;
 }
 
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}

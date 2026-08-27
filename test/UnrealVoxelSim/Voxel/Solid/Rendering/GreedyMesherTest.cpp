@@ -19,7 +19,7 @@ using UnrealVoxelSim::Voxel::Rendering::Api::SurfaceId;
     return Snapshot{target, samples, std::vector<SurfaceId>(*samples.CellCount(), surface)};
 }
 
-} // namespace
+}
 
 TEST(GreedyMesherTest, SingleCellProducesSixQuads)
 {
@@ -77,4 +77,4 @@ TEST(GreedyMesherTest, RejectsInconsistentSnapshotStorage)
     EXPECT_EQ(result.error(), BuildError::InvalidSnapshot);
 }
 
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}

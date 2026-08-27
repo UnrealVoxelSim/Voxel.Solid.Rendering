@@ -7,4 +7,4 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 		InvalidSnapshot,
 		SizeOverflow,
 	};
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}

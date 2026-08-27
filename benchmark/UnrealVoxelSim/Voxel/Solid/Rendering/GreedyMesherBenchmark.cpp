@@ -85,6 +85,6 @@ void FragmentedTerrain(benchmark::State &state)
 BENCHMARK(FlatTerrain)->Unit(benchmark::kMicrosecond);
 BENCHMARK(FragmentedTerrain)->Unit(benchmark::kMicrosecond);
 
-} // namespace
+}
 
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}

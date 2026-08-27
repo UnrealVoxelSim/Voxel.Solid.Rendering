@@ -22,4 +22,4 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 		const UnrealVoxelSim::Voxel::Api::IBounds& m_Bounds;
 		const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader& m_Reader;
 	};
-} // namespace UnrealVoxelSim::Voxel::Solid::Rendering
+}
