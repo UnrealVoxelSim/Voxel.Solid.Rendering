@@ -9,7 +9,7 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 
 Sampler::Sampler(const UnrealVoxelSim::Voxel::Api::IBounds &bounds,
                  const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader &reader) noexcept
-    : Bounds_(bounds), Reader_(reader)
+    : m_Bounds(bounds), m_Reader(reader)
 {
 }
 
@@ -21,7 +21,7 @@ std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Snapshot, CaptureError> Sam
         return std::unexpected{CaptureError::InvalidRegion};
     }
 
-    const auto bounds = Bounds_.Bounds();
+    const auto bounds = m_Bounds.Bounds();
     if (!bounds.Contains(target))
     {
         return std::unexpected{CaptureError::OutOfBounds};
@@ -43,7 +43,7 @@ std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Snapshot, CaptureError> Sam
     }
 
     std::vector<UnrealVoxelSim::Voxel::Solid::Api::Cell> cells(*sampleCount);
-    if (!Reader_.ReadRegion(samples, cells))
+    if (!m_Reader.ReadRegion(samples, cells))
     {
         return std::unexpected{CaptureError::ReadFailed};
     }

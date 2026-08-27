@@ -20,8 +20,8 @@ class Sampler final
         UnrealVoxelSim::Voxel::Api::Region target) const;
 
   private:
-    const UnrealVoxelSim::Voxel::Api::IBounds &Bounds_;
-    const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader &Reader_;
+    const UnrealVoxelSim::Voxel::Api::IBounds &m_Bounds;
+    const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader &m_Reader;
 };
 
 } // namespace UnrealVoxelSim::Voxel::Solid::Rendering

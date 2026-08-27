@@ -18,26 +18,26 @@ class FakeField final : public UnrealVoxelSim::Voxel::Api::IBounds,
                         public UnrealVoxelSim::Voxel::Solid::Api::IRegionReader
 {
   public:
-    explicit FakeField(const UnrealVoxelSim::Voxel::Api::Region bounds) : Bounds_(bounds), Cells_(*bounds.CellCount())
+    explicit FakeField(const UnrealVoxelSim::Voxel::Api::Region bounds) : m_Bounds(bounds), m_Cells(*bounds.CellCount())
     {
     }
 
     [[nodiscard]] UnrealVoxelSim::Voxel::Api::Region Bounds() const noexcept override
     {
-        return Bounds_;
+        return m_Bounds;
     }
 
     void Set(const UnrealVoxelSim::Voxel::Api::Position position,
              const UnrealVoxelSim::Voxel::Solid::Api::MaterialId material)
     {
-        Cells_[Index(position)] = UnrealVoxelSim::Voxel::Solid::Api::Cell{material};
+        m_Cells[Index(position)] = UnrealVoxelSim::Voxel::Solid::Api::Cell{material};
     }
 
     [[nodiscard]] std::expected<void, UnrealVoxelSim::Voxel::Api::ReadError> ReadRegion(
         const UnrealVoxelSim::Voxel::Api::Region region,
         const std::span<UnrealVoxelSim::Voxel::Solid::Api::Cell> output) const override
     {
-        if (!Bounds_.Contains(region))
+        if (!m_Bounds.Contains(region))
         {
             return std::unexpected{UnrealVoxelSim::Voxel::Api::ReadError::OutOfBounds};
         }
@@ -53,7 +53,7 @@ class FakeField final : public UnrealVoxelSim::Voxel::Api::IBounds,
             {
                 for (auto x = region.Min.X; x < region.Max.X; ++x)
                 {
-                    output[index++] = Cells_[Index({x, y, z})];
+                    output[index++] = m_Cells[Index({x, y, z})];
                 }
             }
         }
@@ -63,16 +63,16 @@ class FakeField final : public UnrealVoxelSim::Voxel::Api::IBounds,
   private:
     [[nodiscard]] std::size_t Index(const UnrealVoxelSim::Voxel::Api::Position position) const noexcept
     {
-        const auto width = static_cast<std::size_t>(Bounds_.Max.X - Bounds_.Min.X);
-        const auto height = static_cast<std::size_t>(Bounds_.Max.Y - Bounds_.Min.Y);
-        const auto x = static_cast<std::size_t>(position.X - Bounds_.Min.X);
-        const auto y = static_cast<std::size_t>(position.Y - Bounds_.Min.Y);
-        const auto z = static_cast<std::size_t>(position.Z - Bounds_.Min.Z);
+        const auto width = static_cast<std::size_t>(m_Bounds.Max.X - m_Bounds.Min.X);
+        const auto height = static_cast<std::size_t>(m_Bounds.Max.Y - m_Bounds.Min.Y);
+        const auto x = static_cast<std::size_t>(position.X - m_Bounds.Min.X);
+        const auto y = static_cast<std::size_t>(position.Y - m_Bounds.Min.Y);
+        const auto z = static_cast<std::size_t>(position.Z - m_Bounds.Min.Z);
         return (z * height + y) * width + x;
     }
 
-    UnrealVoxelSim::Voxel::Api::Region Bounds_;
-    std::vector<UnrealVoxelSim::Voxel::Solid::Api::Cell> Cells_;
+    UnrealVoxelSim::Voxel::Api::Region m_Bounds;
+    std::vector<UnrealVoxelSim::Voxel::Solid::Api::Cell> m_Cells;
 };
 
 } // namespace
