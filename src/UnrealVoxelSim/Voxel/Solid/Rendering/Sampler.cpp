@@ -20,7 +20,7 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 			return std::unexpected{CaptureError::InvalidRegion};
 		}
 
-		const auto bounds = m_Bounds.Bounds();
+		const auto bounds = m_Bounds.GetBounds();
 		if (!bounds.Contains(target))
 		{
 			return std::unexpected{CaptureError::OutOfBounds};

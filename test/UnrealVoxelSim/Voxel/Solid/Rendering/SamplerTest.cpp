@@ -22,7 +22,7 @@ class FakeField final : public UnrealVoxelSim::Voxel::Api::IBounds,
     {
     }
 
-    [[nodiscard]] UnrealVoxelSim::Voxel::Api::Region Bounds() const noexcept override
+    [[nodiscard]] UnrealVoxelSim::Voxel::Api::Region GetBounds() const noexcept override
     {
         return m_Bounds;
     }
