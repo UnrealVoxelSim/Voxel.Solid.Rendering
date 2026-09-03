@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <expected>
 #include <span>
 #include <vector>
@@ -81,20 +82,26 @@ TEST(SamplerTest, CapturesOneCellHaloAndMapsMaterialsToSurfaces)
 {
     FakeField field{{{0, 0, 0}, {4, 4, 4}}};
     field.Set({1, 1, 1}, UnrealVoxelSim::Voxel::Solid::Api::StandardMaterials::Grass);
-    const Sampler sampler{field, field};
+    const std::array bindings{
+        UnrealVoxelSim::Voxel::Rendering::Api::MaterialSurfaceBinding{
+            UnrealVoxelSim::Voxel::Solid::Api::StandardMaterials::Grass,
+            UnrealVoxelSim::Voxel::Rendering::Api::SurfaceId{17}},
+    };
+    const Sampler sampler{field, field, bindings};
 
     const auto result = sampler.Capture({{1, 1, 1}, {2, 2, 2}});
 
     ASSERT_TRUE(result);
     EXPECT_EQ(result->Samples, (UnrealVoxelSim::Voxel::Api::Region{{0, 0, 0}, {3, 3, 3}}));
     ASSERT_EQ(result->Cells.size(), 27U);
-    EXPECT_EQ(result->Cells[13].Value(), UnrealVoxelSim::Voxel::Solid::Api::StandardMaterials::Grass.Value());
+    EXPECT_EQ(result->Cells[13].Value(), 17U);
 }
 
 TEST(SamplerTest, ClipsHaloAtLogicalWorldBounds)
 {
     FakeField field{{{-2, -2, -2}, {2, 2, 2}}};
-    const Sampler sampler{field, field};
+    const std::array<UnrealVoxelSim::Voxel::Rendering::Api::MaterialSurfaceBinding, 0> bindings{};
+    const Sampler sampler{field, field, bindings};
 
     const auto result = sampler.Capture({{-2, -2, -2}, {-1, -1, -1}});
 
@@ -105,12 +112,26 @@ TEST(SamplerTest, ClipsHaloAtLogicalWorldBounds)
 TEST(SamplerTest, RejectsTargetsOutsideLogicalBounds)
 {
     FakeField field{{{0, 0, 0}, {4, 4, 4}}};
-    const Sampler sampler{field, field};
+    const std::array<UnrealVoxelSim::Voxel::Rendering::Api::MaterialSurfaceBinding, 0> bindings{};
+    const Sampler sampler{field, field, bindings};
 
     const auto result = sampler.Capture({{-1, 0, 0}, {1, 1, 1}});
 
     ASSERT_FALSE(result);
     EXPECT_EQ(result.error(), CaptureError::OutOfBounds);
+}
+
+TEST(SamplerTest, RejectsOccupiedCellsWithoutSurfaceBindings)
+{
+    FakeField field{{{0, 0, 0}, {4, 4, 4}}};
+    field.Set({1, 1, 1}, UnrealVoxelSim::Voxel::Solid::Api::StandardMaterials::Grass);
+    const std::array<UnrealVoxelSim::Voxel::Rendering::Api::MaterialSurfaceBinding, 0> bindings{};
+    const Sampler sampler{field, field, bindings};
+
+    const auto result = sampler.Capture({{1, 1, 1}, {2, 2, 2}});
+
+    ASSERT_FALSE(result);
+    EXPECT_EQ(result.error(), CaptureError::UnknownMaterial);
 }
 
 }

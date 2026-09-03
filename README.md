@@ -3,11 +3,12 @@
 Portable derivation of renderer-neutral surface meshes from solid voxel state.
 
 `Sampler` performs one coarse-grained solid-region read for a target tile and its clipped one-cell halo. It maps empty
-cells to surface zero and material identifiers to opaque rendering surface identifiers. Sampling is thread-affine with
-the injected voxel capabilities.
+cells to surface zero and authoritative material identifiers through injected renderer-neutral surface bindings.
+Sampling is thread-affine with the injected voxel capabilities.
 
 `GreedyMesher` consumes only an owned `Voxel.Rendering.Api::Snapshot`. It removes internal faces and merges coplanar
-faces that share orientation and surface identity. The mesher is stateless and snapshots may be moved to worker threads.
+faces that share orientation and surface identity. It emits cell-space UV coordinates so repeatable voxel textures retain
+one texture tile per voxel across merged quads. The mesher is stateless and snapshots may be moved to worker threads.
 Greedy merges deliberately stop at caller-selected logical tile boundaries so rebuild and culling granularity remain
 bounded and independent of storage chunks.
 

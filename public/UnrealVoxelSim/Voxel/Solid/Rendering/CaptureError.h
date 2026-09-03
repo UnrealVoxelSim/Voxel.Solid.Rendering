@@ -8,5 +8,6 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 		OutOfBounds,
 		SizeOverflow,
 		ReadFailed,
+		UnknownMaterial,
 	};
 }

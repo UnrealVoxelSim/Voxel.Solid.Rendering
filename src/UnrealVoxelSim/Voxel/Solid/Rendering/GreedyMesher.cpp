@@ -1,10 +1,12 @@
 #include "UnrealVoxelSim/Voxel/Solid/Rendering/GreedyMesher.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace UnrealVoxelSim::Voxel::Solid::Rendering
@@ -24,6 +26,28 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 
 			auto operator<=>(const MaskCell&) const = default;
 		};
+
+		struct TextureBasis final
+		{
+			std::size_t UAxis{};
+			std::int8_t UDirection{};
+			std::size_t VAxis{};
+			std::int8_t VDirection{};
+		};
+
+		[[nodiscard]] TextureBasis FaceTextureBasis(const std::size_t axis,
+		                                           const std::int8_t direction) noexcept
+		{
+			if (axis == 0)
+			{
+				return {1, direction, 2, 1};
+			}
+			if (axis == 1)
+			{
+				return {0, static_cast<std::int8_t>(-direction), 2, 1};
+			}
+			return {0, 1, 1, direction};
+		}
 
 		[[nodiscard]] std::optional<std::array<std::int32_t, 3>> Dimensions(
 			const UnrealVoxelSim::Voxel::Api::Region region) noexcept
@@ -87,11 +111,13 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 		[[nodiscard]] Vertex MakeVertex(const std::array<std::int32_t, 3>& position,
 		                                const std::size_t axis,
 		                                const std::int8_t direction,
-		                                const SurfaceId surface) noexcept
+		                                const SurfaceId surface,
+		                                const float u,
+		                                const float v) noexcept
 		{
 			std::array<std::int8_t, 3> normal{};
 			normal[axis] = direction;
-			return Vertex{position[0], position[1], position[2], normal[0], normal[1], normal[2], surface};
+			return Vertex{position[0], position[1], position[2], normal[0], normal[1], normal[2], surface, u, v};
 		}
 
 		[[nodiscard]] bool AppendQuad(Mesh& mesh,
@@ -118,19 +144,58 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 			uvEnd[v] += height;
 
 			const auto base = static_cast<std::uint32_t>(mesh.Vertices.size());
+			const auto basis = FaceTextureBasis(axis, cell.Direction);
+			const auto minimum = [](const std::int32_t first,
+			                       const std::int32_t second,
+			                       const std::int32_t third,
+			                       const std::int32_t fourth) noexcept
+			{
+				return std::min(std::min(first, second), std::min(third, fourth));
+			};
+			const auto maximum = [](const std::int32_t first,
+			                       const std::int32_t second,
+			                       const std::int32_t third,
+			                       const std::int32_t fourth) noexcept
+			{
+				return std::max(std::max(first, second), std::max(third, fourth));
+			};
+			const auto uMinimum = minimum(origin[basis.UAxis], uEnd[basis.UAxis], vEnd[basis.UAxis], uvEnd[basis.UAxis]);
+			const auto uMaximum = maximum(origin[basis.UAxis], uEnd[basis.UAxis], vEnd[basis.UAxis], uvEnd[basis.UAxis]);
+			const auto vMinimum = minimum(origin[basis.VAxis], uEnd[basis.VAxis], vEnd[basis.VAxis], uvEnd[basis.VAxis]);
+			const auto vMaximum = maximum(origin[basis.VAxis], uEnd[basis.VAxis], vEnd[basis.VAxis], uvEnd[basis.VAxis]);
+			const auto textureCoordinates = [&](const std::array<std::int32_t, 3>& position) noexcept
+			{
+				const auto u = basis.UDirection > 0 ? position[basis.UAxis] - uMinimum
+				                                  : uMaximum - position[basis.UAxis];
+				const auto vCoordinate = basis.VDirection > 0 ? position[basis.VAxis] - vMinimum
+				                                            : vMaximum - position[basis.VAxis];
+				return std::pair{static_cast<float>(u), static_cast<float>(vCoordinate)};
+			};
+			const auto originTexture = textureCoordinates(origin);
+			const auto uEndTexture = textureCoordinates(uEnd);
+			const auto vEndTexture = textureCoordinates(vEnd);
+			const auto uvEndTexture = textureCoordinates(uvEnd);
 			if (cell.Direction > 0)
 			{
-				mesh.Vertices.push_back(MakeVertex(origin, axis, cell.Direction, cell.Surface));
-				mesh.Vertices.push_back(MakeVertex(uEnd, axis, cell.Direction, cell.Surface));
-				mesh.Vertices.push_back(MakeVertex(uvEnd, axis, cell.Direction, cell.Surface));
-				mesh.Vertices.push_back(MakeVertex(vEnd, axis, cell.Direction, cell.Surface));
+				mesh.Vertices.push_back(
+					MakeVertex(origin, axis, cell.Direction, cell.Surface, originTexture.first, originTexture.second));
+				mesh.Vertices.push_back(
+					MakeVertex(uEnd, axis, cell.Direction, cell.Surface, uEndTexture.first, uEndTexture.second));
+				mesh.Vertices.push_back(
+					MakeVertex(uvEnd, axis, cell.Direction, cell.Surface, uvEndTexture.first, uvEndTexture.second));
+				mesh.Vertices.push_back(
+					MakeVertex(vEnd, axis, cell.Direction, cell.Surface, vEndTexture.first, vEndTexture.second));
 			}
 			else
 			{
-				mesh.Vertices.push_back(MakeVertex(origin, axis, cell.Direction, cell.Surface));
-				mesh.Vertices.push_back(MakeVertex(vEnd, axis, cell.Direction, cell.Surface));
-				mesh.Vertices.push_back(MakeVertex(uvEnd, axis, cell.Direction, cell.Surface));
-				mesh.Vertices.push_back(MakeVertex(uEnd, axis, cell.Direction, cell.Surface));
+				mesh.Vertices.push_back(
+					MakeVertex(origin, axis, cell.Direction, cell.Surface, originTexture.first, originTexture.second));
+				mesh.Vertices.push_back(
+					MakeVertex(vEnd, axis, cell.Direction, cell.Surface, vEndTexture.first, vEndTexture.second));
+				mesh.Vertices.push_back(
+					MakeVertex(uvEnd, axis, cell.Direction, cell.Surface, uvEndTexture.first, uvEndTexture.second));
+				mesh.Vertices.push_back(
+					MakeVertex(uEnd, axis, cell.Direction, cell.Surface, uEndTexture.first, uEndTexture.second));
 			}
 
 			mesh.Indices.insert(mesh.Indices.end(), {base, base + 1, base + 2, base, base + 2, base + 3});

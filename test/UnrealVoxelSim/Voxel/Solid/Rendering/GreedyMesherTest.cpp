@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace UnrealVoxelSim::Voxel::Solid::Rendering
 {
@@ -41,6 +43,44 @@ TEST(GreedyMesherTest, MergesAUniformRunIntoSixQuads)
     ASSERT_TRUE(result);
     EXPECT_EQ(result->Vertices.size(), 24U);
     EXPECT_EQ(result->Indices.size(), 36U);
+}
+
+TEST(GreedyMesherTest, EmitsCellSpaceUvsThatRepeatAcrossMergedQuads)
+{
+    const auto snapshot = FilledSnapshot({{0, 0, 0}, {4, 1, 1}}, {{0, 0, 0}, {4, 1, 1}}, SurfaceId{2});
+
+    const auto result = GreedyMesher{}.Build(snapshot);
+
+    ASSERT_TRUE(result);
+    std::vector<std::pair<float, float>> topFaceCoordinates;
+    for (const auto& vertex : result->Vertices)
+    {
+        if (vertex.NormalZ == 1)
+        {
+            topFaceCoordinates.emplace_back(vertex.U, vertex.V);
+        }
+    }
+
+    ASSERT_EQ(topFaceCoordinates.size(), 4U);
+    EXPECT_EQ(topFaceCoordinates,
+              (std::vector<std::pair<float, float>>{{0.0F, 0.0F}, {4.0F, 0.0F}, {4.0F, 1.0F}, {0.0F, 1.0F}}));
+}
+
+TEST(GreedyMesherTest, MapsGameUpToTextureVOnEveryVerticalFace)
+{
+    const auto snapshot = FilledSnapshot({{0, 0, 0}, {1, 1, 2}}, {{0, 0, 0}, {1, 1, 2}}, SurfaceId{2});
+
+    const auto result = GreedyMesher{}.Build(snapshot);
+
+    ASSERT_TRUE(result);
+    for (const auto &vertex : result->Vertices)
+    {
+        if (vertex.NormalX == 0 && vertex.NormalY == 0)
+        {
+            continue;
+        }
+        EXPECT_FLOAT_EQ(vertex.V, static_cast<float>(vertex.Z));
+    }
 }
 
 TEST(GreedyMesherTest, MaterialChangesSplitVisibleQuadsButNotInternalFaces)

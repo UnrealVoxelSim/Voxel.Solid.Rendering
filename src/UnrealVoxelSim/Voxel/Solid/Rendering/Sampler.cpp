@@ -2,14 +2,31 @@
 
 #include "UnrealVoxelSim/Voxel/Solid/Api/Cell.h"
 
+#include <algorithm>
+#include <ranges>
 #include <vector>
 
 namespace UnrealVoxelSim::Voxel::Solid::Rendering
 {
 	Sampler::Sampler(const UnrealVoxelSim::Voxel::Api::IBounds& bounds,
-	                 const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader& reader) noexcept
-		: m_Bounds(bounds), m_Reader(reader)
+	                 const UnrealVoxelSim::Voxel::Solid::Api::IRegionReader& reader,
+	                 const std::span<const UnrealVoxelSim::Voxel::Rendering::Api::MaterialSurfaceBinding> bindings) noexcept
+		: m_Bounds(bounds), m_Reader(reader), m_Bindings(bindings)
 	{
+	}
+
+	namespace
+	{
+		using UnrealVoxelSim::Voxel::Rendering::Api::SurfaceId;
+		using UnrealVoxelSim::Voxel::Rendering::Api::MaterialSurfaceBinding;
+		using UnrealVoxelSim::Voxel::Solid::Api::Cell;
+
+		[[nodiscard]] SurfaceId ResolveSurface(const Cell& cell,
+		                                      const std::span<const MaterialSurfaceBinding> bindings) noexcept
+		{
+			const auto iterator = std::ranges::find(bindings, cell.Material(), &MaterialSurfaceBinding::Material);
+			return iterator == bindings.end() ? SurfaceId{} : iterator->Surface;
+		}
 	}
 
 	std::expected<UnrealVoxelSim::Voxel::Rendering::Api::Snapshot, CaptureError> Sampler::Capture(
@@ -57,7 +74,18 @@ namespace UnrealVoxelSim::Voxel::Solid::Rendering
 		snapshot.Cells.reserve(cells.size());
 		for (const auto cell : cells)
 		{
-			snapshot.Cells.emplace_back(cell.IsEmpty() ? 0U : cell.Material().Value());
+			if (cell.IsEmpty())
+			{
+				snapshot.Cells.emplace_back();
+				continue;
+			}
+
+			const auto surface = ResolveSurface(cell, m_Bindings);
+			if (!surface.IsValid())
+			{
+				return std::unexpected{CaptureError::UnknownMaterial};
+			}
+			snapshot.Cells.emplace_back(surface);
 		}
 		return snapshot;
 	}
